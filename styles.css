@@ -412,6 +412,98 @@ h1 {
     margin-bottom: 20px;
 }
 
+/* Footer Styles */
+.footer {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px 0;
+    margin-top: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+}
+
+.footer-content {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.footer-info {
+    text-align: center;
+}
+
+.footer-name {
+    font-size: 1em;
+    font-weight: normal;
+    margin-bottom: 5px;
+    color: white;
+}
+
+.footer-copyright {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0;
+}
+
+.footer-social {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.social-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Website icon - Green hover */
+.social-link[title="Website"]:hover {
+    background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+}
+
+/* LinkedIn icon - Blue hover */
+.social-link[title="LinkedIn"]:hover {
+    background: linear-gradient(135deg, #0077b5 0%, #00a0dc 100%);
+}
+
+/* GitHub icon - Black hover */
+.social-link[title="GitHub"]:hover {
+    background: linear-gradient(135deg, #24292e 0%, #434343 100%);
+}
+
+/* Instagram icon - Red hover */
+.social-link[title="Instagram"]:hover {
+    background: linear-gradient(135deg, #e4405f 0%, #f77737 100%);
+}
+
+.social-link svg {
+    transition: transform 0.3s ease;
+}
+
+.social-link:hover svg {
+    transform: scale(1.1);
+}
+
 @media (max-width: 480px) {
     .game-container {
         padding: 20px;
@@ -427,5 +519,19 @@ h1 {
     
     .answer-options {
         grid-template-columns: 1fr;
+    }
+    
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .footer-info {
+        min-width: auto;
+    }
+    
+    .footer-social {
+        justify-content: center;
     }
 }
