@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Puzzle Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .info-box {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .puzzle-container {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 3px solid #e9ecef;
+        }
+
+        .puzzle-question {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .option-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .option-btn:active {
+            transform: translateY(0);
+        }
+
+        .option-btn.correct {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            animation: correct 0.6s ease;
+        }
+
+        .option-btn.wrong {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            animation: wrong 0.6s ease;
+        }
+
+        @keyframes correct {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes wrong {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .next-btn {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: none;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+
+        .game-over {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .game-over h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .final-score {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .restart-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .lang-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+
+        .lang-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .lang-btn.active {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+        }
+
+        .timer {
+            font-size: 1.2em;
+            color: #ff416c;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .puzzle-question {
+                font-size: 1.5em;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="game-container">
+        <header>
+            <h1 id="gameTitle">Math Puzzle Game</h1>
+            <p style="color: #666;" id="gameDescription">Solve math problems and increase your score!</p>
+            <div style="margin-top: 15px;">
+                <button onclick="changeLanguage('en')" class="lang-btn" id="langEn">English</button>
+                <button onclick="changeLanguage('hi')" class="lang-btn" id="langHi">हिंदी</button>
+            </div>
+        </header>
+
+        <section class="game-info">
+            <div class="info-box">
+                <span id="levelLabel">Level</span>: <span id="level">1</span>
+            </div>
+            <div class="info-box">
+                <span id="scoreLabel">Score</span>: <span id="score">0</span>
+            </div>
+            <div class="info-box">
+                <span id="livesLabel">Lives</span>: <span id="lives">3</span> ❤️
+            </div>
+        </section>
+
+        <div class="timer" id="timer">⏱️ <span id="timeLabel">Time</span>: <span id="time">30</span> <span id="secondsLabel">seconds</span></div>
+
+        <section class="puzzle-container" id="puzzleContainer">
+            <div class="puzzle-question" id="puzzleQuestion">
+                <span id="loadingText">Loading...</span>
+            </div>
+            <div class="answer-options" id="answerOptions">
+                <!-- Options will be generated dynamically -->
+            </div>
+        </section>
+
+        <div class="message" id="message"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextPuzzle()"><span id="nextQuestionText">Next Question</span> →</button>
+
+        <section class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">🎮 Game Over!</h2>
+            <div class="final-score">
+                <span id="finalScoreLabel">Your Final Score</span>: <span id="finalScore">0</span>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">
+                <span id="reachedLevelText">You reached level</span> <span id="finalLevel">1</span>!
+            </p>
+            <button class="restart-btn" onclick="restartGame()" id="playAgainBtn">Play Again</button>
+        </section>
+    </main>
+
+    <script>
+        // Game variables
+        let currentLevel = 1;
+        let score = 0;
+        let lives = 3;
+        let currentPuzzle = null;
+        let timer = null;
+        let timeLeft = 30;
+        let isAnswered = false;
+        let currentLanguage = 'en';
+
+        // Puzzle types
+        const puzzleTypes = [
+            'addition',
+            'subtraction', 
+            'multiplication',
+            'division',
+            'mixed'
+        ];
+
+        // Initialize game
+        function initGame() {
+            updateDisplay();
+            generatePuzzle();
+        }
+
+        // Generate math puzzle
+        function generatePuzzle() {
+            isAnswered = false;
+            hideMessage();
+            document.getElementById('nextBtn').style.display = 'none';
+            
+            // Reset timer
+            clearInterval(timer);
+            timeLeft = Math.max(15, 35 - currentLevel * 2); // Timer gets shorter as levels increase
+            updateTimer();
+            startTimer();
+            
+            // Select puzzle type based on level
+            let puzzleType;
+            if (currentLevel <= 2) {
+                puzzleType = 'addition';
+            } else if (currentLevel <= 4) {
+                puzzleType = puzzleTypes[Math.floor(Math.random() * 2)]; // addition or subtraction
+            } else if (currentLevel <= 7) {
+                puzzleType = puzzleTypes[Math.floor(Math.random() * 3)]; // addition, subtraction, multiplication
+            } else if (currentLevel <= 10) {
+                puzzleType = puzzleTypes[Math.floor(Math.random() * 4)]; // addition, subtraction, multiplication, division
+            } else {
+                puzzleType = 'mixed'; // All operations
+            }
+            
+            currentPuzzle = createPuzzle(puzzleType);
+            displayPuzzle();
+        }
+
+        // Create specific puzzle
+        function createPuzzle(type) {
+            let num1, num2, answer, question, options;
+            
+            switch(type) {
+                case 'addition':
+                    num1 = Math.floor(Math.random() * (currentLevel * 10)) + 1;
+                    num2 = Math.floor(Math.random() * (currentLevel * 10)) + 1;
+                    answer = num1 + num2;
+                    question = `${num1} + ${num2} = ?`;
+                    break;
+                    
+                case 'subtraction':
+                    num1 = Math.floor(Math.random() * (currentLevel * 10)) + 10;
+                    num2 = Math.floor(Math.random() * num1) + 1;
+                    answer = num1 - num2;
+                    question = `${num1} - ${num2} = ?`;
+                    break;
+                    
+                case 'multiplication':
+                    num1 = Math.floor(Math.random() * Math.min(currentLevel + 5, 12)) + 1;
+                    num2 = Math.floor(Math.random() * Math.min(currentLevel + 5, 12)) + 1;
+                    answer = num1 * num2;
+                    question = `${num1} × ${num2} = ?`;
+                    break;
+                    
+                case 'division':
+                    num2 = Math.floor(Math.random() * Math.min(currentLevel + 3, 10)) + 1;
+                    answer = Math.floor(Math.random() * Math.min(currentLevel + 5, 10)) + 1;
+                    num1 = num2 * answer;
+                    question = `${num1} ÷ ${num2} = ?`;
+                    break;
+                    
+                case 'mixed':
+                    const operations = ['addition', 'subtraction', 'multiplication', 'division'];
+                    return createPuzzle(operations[Math.floor(Math.random() * operations.length)]);
+            }
+            
+            // Generate wrong options
+            options = [answer];
+            while (options.length < 4) {
+                let wrongOption;
+                if (Math.random() < 0.5) {
+                    wrongOption = answer + Math.floor(Math.random() * 10) - 5;
+                } else {
+                    wrongOption = answer + Math.floor(Math.random() * 20) - 10;
+                }
+                
+                if (wrongOption > 0 && !options.includes(wrongOption)) {
+                    options.push(wrongOption);
+                }
+            }
+            
+            // Shuffle options
+            options.sort(() => Math.random() - 0.5);
+            
+            return {
+                question: question,
+                answer: answer,
+                options: options
+            };
+        }
+
+        // Display puzzle
+        function displayPuzzle() {
+            document.getElementById('puzzleQuestion').textContent = currentPuzzle.question;
+            
+            const optionsContainer = document.getElementById('answerOptions');
+            optionsContainer.innerHTML = '';
+            
+            currentPuzzle.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.onclick = () => checkAnswer(option, button);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        // Check answer
+        function checkAnswer(selectedAnswer, buttonElement) {
+            if (isAnswered) return;
+            
+            isAnswered = true;
+            clearInterval(timer);
+            
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => btn.style.pointerEvents = 'none');
+            
+            if (selectedAnswer === currentPuzzle.answer) {
+                buttonElement.classList.add('correct');
+                score += currentLevel * 10;
+                showMessage(translations[currentLanguage].correct, 'success');
+                
+                // Level up every 3 correct answers
+                if (score > 0 && score % 30 === 0) {
+                    currentLevel++;
+                    showMessage(`${translations[currentLanguage].correct} ${translations[currentLanguage].levelUp} ${currentLevel}!`, 'success');
+                }
+            } else {
+                buttonElement.classList.add('wrong');
+                lives--;
+                showMessage(`${translations[currentLanguage].wrong} ${currentPuzzle.answer}.`, 'error');
+                
+                // Show correct answer
+                buttons.forEach(btn => {
+                    if (btn.textContent == currentPuzzle.answer) {
+                        btn.classList.add('correct');
+                    }
+                });
+                
+                if (lives <= 0) {
+                    setTimeout(gameOver, 2000);
+                    return;
+                }
+            }
+            
+            updateDisplay();
+            document.getElementById('nextBtn').style.display = 'inline-block';
+        }
+
+        // Next puzzle
+        function nextPuzzle() {
+            generatePuzzle();
+        }
+
+        // Timer functions
+        function startTimer() {
+            timer = setInterval(() => {
+                timeLeft--;
+                updateTimer();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    timeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimer() {
+            document.getElementById('time').textContent = timeLeft;
+            if (timeLeft <= 5) {
+                document.getElementById('timer').style.color = '#ff0000';
+            } else {
+                document.getElementById('timer').style.color = '#ff416c';
+            }
+        }
+
+        function timeUp() {
+            if (isAnswered) return;
+            
+            isAnswered = true;
+            lives--;
+            showMessage(`${translations[currentLanguage].timeUp} ${currentPuzzle.answer}.`, 'error');
+            
+            // Show correct answer
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(btn => {
+                btn.style.pointerEvents = 'none';
+                if (btn.textContent == currentPuzzle.answer) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            updateDisplay();
+            
+            if (lives <= 0) {
+                setTimeout(gameOver, 2000);
+            } else {
+                document.getElementById('nextBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Display functions
+        function updateDisplay() {
+            document.getElementById('level').textContent = currentLevel;
+            document.getElementById('score').textContent = score;
+            document.getElementById('lives').textContent = lives;
+        }
+
+        function showMessage(text, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.className = `message ${type}`;
+            messageEl.style.display = 'block';
+        }
+
+        function hideMessage() {
+            document.getElementById('message').style.display = 'none';
+        }
+
+        // Game over
+        function gameOver() {
+            clearInterval(timer);
+            document.getElementById('puzzleContainer').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('gameOver').style.display = 'block';
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalLevel').textContent = currentLevel;
+            document.getElementById('timer').style.display = 'none';
+        }
+
+        // Restart game
+        function restartGame() {
+            currentLevel = 1;
+            score = 0;
+            lives = 3;
+            timeLeft = 30;
+            isAnswered = false;
+            
+            document.getElementById('puzzleContainer').style.display = 'block';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('timer').style.display = 'block';
+            
+            initGame();
+        }
+
+        // Start game when page loads
+        window.onload = function() {
+            initGame();
+            updateLanguageButtons();
+        };
+
+        // Language translations
+        const translations = {
+            en: {
+                title: 'Math Puzzle Game',
+                description: 'Solve math problems and increase your score!',
+                level: 'Level',
+                score: 'Score',
+                lives: 'Lives',
+                time: 'Time',
+                seconds: 'seconds',
+                loading: 'Loading...',
+                nextQuestion: 'Next Question',
+                gameOver: '🎮 Game Over!',
+                finalScore: 'Your Final Score',
+                reachedLevel: 'You reached level',
+                playAgain: 'Play Again',
+                correct: 'Correct Answer! 🎉',
+                wrong: 'Wrong Answer! 😔 The correct answer was',
+                timeUp: "Time's Up! 😔 The correct answer was",
+                levelUp: 'Advance to level'
+            },
+            hi: {
+                title: 'मैथ पहेली गेम',
+                description: 'गणित के प्रश्नों को हल करें और स्कोर बढ़ाएं!',
+                level: 'स्तर',
+                score: 'स्कोर',
+                lives: 'जीवन',
+                time: 'समय',
+                seconds: 'सेकंड',
+                loading: 'लोड हो रहा है...',
+                nextQuestion: 'अगला प्रश्न',
+                gameOver: '🎮 खेल समाप्त!',
+                finalScore: 'आपका अंतिम स्कोर',
+                reachedLevel: 'आपने',
+                playAgain: 'फिर से खेलें',
+                correct: 'सही जवाब! 🎉',
+                wrong: 'गलत जवाब! 😔 सही जवाब',
+                timeUp: 'समय समाप्त! 😔 सही जवाब',
+                levelUp: 'स्तर में आगे बढ़ें'
+            }
+        };
+
+        // Change language function
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            updateLanguage();
+            updateLanguageButtons();
+        }
+
+        // Update language buttons
+        function updateLanguageButtons() {
+            document.getElementById('langEn').classList.toggle('active', currentLanguage === 'en');
+            document.getElementById('langHi').classList.toggle('active', currentLanguage === 'hi');
+        }
+
+        // Update all text elements
+        function updateLanguage() {
+            const t = translations[currentLanguage];
+            document.getElementById('gameTitle').textContent = t.title;
+            document.getElementById('gameDescription').textContent = t.description;
+            document.getElementById('levelLabel').textContent = t.level;
+            document.getElementById('scoreLabel').textContent = t.score;
+            document.getElementById('livesLabel').textContent = t.lives;
+            document.getElementById('timeLabel').textContent = t.time;
+            document.getElementById('secondsLabel').textContent = t.seconds;
+            document.getElementById('loadingText').textContent = t.loading;
+            document.getElementById('nextQuestionText').textContent = t.nextQuestion;
+            document.getElementById('gameOverTitle').textContent = t.gameOver;
+            document.getElementById('finalScoreLabel').textContent = t.finalScore;
+            document.getElementById('reachedLevelText').textContent = t.reachedLevel;
+            document.getElementById('playAgainBtn').textContent = t.playAgain;
+        }
+    </script>
+</body>
+</html>

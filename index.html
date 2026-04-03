@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Puzzle Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="game-container">
+        <header>
+            <h1 id="gameTitle">Math Puzzle Game</h1>
+            <p style="color: #666;" id="gameDescription">Solve math problems and increase your score!</p>
+            <div style="margin-top: 15px;">
+                <button onclick="changeLanguage('en')" class="lang-btn" id="langEn">English</button>
+                <button onclick="changeLanguage('hi')" class="lang-btn" id="langHi">हिंदी</button>
+                <button onclick="toggleSound()" class="sound-btn" id="soundBtn">🔊</button>
+                <button onclick="showLeaderboard()" class="leaderboard-btn" id="leaderboardBtn">MAX</button>
+            </div>
+        </header>
+
+        <section class="game-info">
+            <div class="info-box">
+                <span id="levelLabel">Level</span>: <span id="level">1</span>
+            </div>
+            <div class="info-box">
+                <span id="scoreLabel">Score</span>: <span id="score">0</span>
+            </div>
+            <div class="info-box">
+                <span id="livesLabel">Lives</span>: <span id="lives">3</span> ❤️
+            </div>
+        </section>
+
+        <div class="timer" id="timer">⏱️ <span id="timeLabel">Time</span>: <span id="time">30</span> <span id="secondsLabel">seconds</span></div>
+
+        <section class="puzzle-container" id="puzzleContainer">
+            <div class="puzzle-question" id="puzzleQuestion">
+                <span id="loadingText">Loading...</span>
+            </div>
+            <div class="answer-options" id="answerOptions">
+                <!-- Options will be generated dynamically -->
+            </div>
+        </section>
+
+        <div class="message" id="message"></div>
+        <button class="next-btn" id="nextBtn" onclick="nextPuzzle()"><span id="nextQuestionText">Next Question</span> →</button>
+
+        <section class="game-over" id="gameOver">
+            <h2 id="gameOverTitle">🎮 Game Over!</h2>
+            <div class="final-score">
+                <span id="finalScoreLabel">Your Final Score</span>: <span id="finalScore">0</span>
+            </div>
+            <p style="color: #666; margin-bottom: 20px;">
+                <span id="reachedLevelText">You reached level</span> <span id="finalLevel">1</span>!
+            </p>
+            <button class="restart-btn" onclick="restartGame()" id="playAgainBtn">Play Again</button>
+        </section>
+    </main>
+
+    <!-- Leaderboard Modal -->
+    <div class="modal" id="leaderboardModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="leaderboardTitle">🏆 MAX High Scores</h2>
+                <button class="close-btn" onclick="closeLeaderboard()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="leaderboard-list" id="leaderboardList">
+                    <!-- Leaderboard entries will be generated here -->
+                </div>
+                <button class="clear-scores-btn" onclick="clearLeaderboard()" id="clearScoresBtn">Clear All Scores</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="sounds.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
