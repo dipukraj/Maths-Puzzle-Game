@@ -14,6 +14,132 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
 
+// Visitor Counter
+function trackVisitor() {
+    try {
+        const visitorRef = database.ref('visitors');
+        const sessionRef = database.ref('currentSessions');
+        
+        // Get current date
+        const today = new Date().toLocaleDateString();
+        
+        // Update daily visitor count
+        visitorRef.child('total').transaction((currentValue) => {
+            return (currentValue || 0) + 1;
+        });
+        
+        visitorRef.child(today).transaction((currentValue) => {
+            return (currentValue || 0) + 1;
+        });
+        
+        // Track current session
+        const sessionId = getDeviceId() + '_' + Date.now();
+        sessionRef.child(sessionId).set({
+            timestamp: Date.now(),
+            device: getDeviceInfo(),
+            lastSeen: Date.now()
+        });
+        
+        console.log('Visitor tracked successfully');
+        
+        // Remove session after 30 minutes of inactivity
+        setTimeout(() => {
+            sessionRef.child(sessionId).remove();
+        }, 30 * 60 * 1000);
+        
+        // Update last seen every minute
+        const updateInterval = setInterval(() => {
+            sessionRef.child(sessionId).update({
+                lastSeen: Date.now()
+            });
+        }, 60 * 1000);
+        
+        // Clear interval when page unloads
+        window.addEventListener('beforeunload', () => {
+            clearInterval(updateInterval);
+            sessionRef.child(sessionId).remove();
+        });
+    } catch (error) {
+        console.error('Error tracking visitor:', error);
+        // Show fallback display
+        updateVisitorDisplay(1, 1);
+    }
+}
+
+function getVisitorStats() {
+    try {
+        const visitorRef = database.ref('visitors');
+        const sessionRef = database.ref('currentSessions');
+        
+        visitorRef.on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            const totalVisitors = data.total || 0;
+            const today = new Date().toLocaleDateString();
+            const todayVisitors = data[today] || 0;
+            
+            console.log('Visitor stats received:', totalVisitors, todayVisitors);
+            
+            // Update visitor display
+            updateVisitorDisplay(totalVisitors, todayVisitors);
+        });
+        
+        sessionRef.on('value', (snapshot) => {
+            const sessions = snapshot.val() || {};
+            const activePlayers = Object.keys(sessions).length;
+            
+            console.log('Active players:', activePlayers);
+            
+            // Update active players count
+            updateActivePlayersDisplay(activePlayers);
+        });
+    } catch (error) {
+        console.error('Error getting visitor stats:', error);
+        // Show fallback display
+        updateVisitorDisplay(1, 1);
+        updateActivePlayersDisplay(1);
+    }
+}
+
+function updateVisitorDisplay(total, today) {
+    let visitorDisplay = document.getElementById('visitorDisplay');
+    if (!visitorDisplay) {
+        visitorDisplay = document.createElement('div');
+        visitorDisplay.id = 'visitorDisplay';
+        visitorDisplay.className = 'visitor-counter';
+        
+        // Add to footer (inside footer box)
+        const footer = document.querySelector('.footer');
+        if (footer) {
+            footer.appendChild(visitorDisplay);
+            console.log('Visitor counter added to footer (inside box)');
+        } else {
+            // Fallback: add to body
+            document.body.appendChild(visitorDisplay);
+            console.log('Footer not found, added to body');
+        }
+    }
+    
+    visitorDisplay.innerHTML = `
+        <div class="visitor-stats">
+            <span class="visitor-icon">👥</span>
+            <div class="visitor-info">
+                <div class="visitor-count">Total Players: ${total}</div>
+                <div class="today-count">Today: ${today}</div>
+                <div class="active-count" id="activeCount">Online Now: 0</div>
+            </div>
+        </div>
+    `;
+    
+    console.log('Visitor display updated:', total, today);
+}
+
+function updateActivePlayersDisplay(active) {
+    const activeCount = document.getElementById('activeCount');
+    if (activeCount) {
+        activeCount.textContent = `Online Now: ${active}`;
+    }
+}
+
 // Game variables
 let currentLevel = 1;
 let score = 0;
@@ -612,7 +738,7 @@ function showLeaderboard() {
         if (localLeaderboard.length > 0) {
             const localTitle = document.createElement('div');
             localTitle.className = 'leaderboard-section-title';
-            localTitle.innerHTML = `📱 Your Scores (${localLeaderboard.length})`;
+            localTitle.innerHTML = `📱 Your Top Scores (${localLeaderboard.length})`;
             leaderboardList.appendChild(localTitle);
             
             localLeaderboard.forEach((entry, index) => {
@@ -625,7 +751,7 @@ function showLeaderboard() {
         if (globalLeaderboard.length > 0) {
             const globalTitle = document.createElement('div');
             globalTitle.className = 'leaderboard-section-title';
-            globalTitle.innerHTML = `🌍 Global Scores (${globalLeaderboard.length})`;
+            globalTitle.innerHTML = `🌍 Global Top Scores (${globalLeaderboard.length})`;
             leaderboardList.appendChild(globalTitle);
             
             // Show all global scores (no limit)
@@ -702,6 +828,20 @@ window.onclick = function(event) {
 
 // Start game when page loads
 window.onload = function() {
+    // Track visitor and start stats
+    trackVisitor();
+    getVisitorStats();
+    
+    // Fallback: Show visitor counter after 3 seconds if not visible
+    setTimeout(() => {
+        const visitorDisplay = document.getElementById('visitorDisplay');
+        if (!visitorDisplay) {
+            console.log('Firebase not working, showing fallback visitor counter');
+            updateVisitorDisplay(1, 1);
+            updateActivePlayersDisplay(1);
+        }
+    }, 3000);
+    
     initGame();
     updateLanguageButtons();
     // Add click sound to all buttons

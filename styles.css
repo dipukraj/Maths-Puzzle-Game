@@ -505,6 +505,99 @@ h1 {
         max-width: 500px;
     }
 }
+
+/* Visitor Counter Styles */
+.visitor-counter {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 0.8em;
+    font-weight: bold;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.visitor-counter:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.visitor-stats {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.visitor-icon {
+    font-size: 1.2em;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+.visitor-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    text-align: left;
+}
+
+.visitor-count {
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+.today-count {
+    font-size: 0.8em;
+    opacity: 0.9;
+}
+
+.active-count {
+    font-size: 0.8em;
+    color: #ffeb3b;
+    font-weight: bold;
+}
+
+/* Mobile responsive for visitor counter */
+@media (max-width: 768px) {
+    .visitor-counter {
+        margin-top: 10px;
+        padding: 10px 15px;
+        font-size: 0.7em;
+        max-width: 250px;
+    }
+    
+    .visitor-info {
+        gap: 3px;
+    }
+    
+    .visitor-count {
+        font-size: 0.8em;
+    }
+    
+    .today-count {
+        font-size: 0.7em;
+    }
+    
+    .active-count {
+        font-size: 0.7em;
+    }
+}
+
 .footer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
