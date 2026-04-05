@@ -517,10 +517,10 @@ function saveScore() {
     leaderboard.push(newScore);
     leaderboard.sort((a, b) => b.score - a.score); // Sort by score (highest first)
     
-    // Keep only top 10 scores
-    if (leaderboard.length > 10) {
-        leaderboard.splice(10);
-    }
+    // Remove limit - keep all scores
+    // if (leaderboard.length > 10) {
+    //     leaderboard.splice(10);
+    // }
     
     localStorage.setItem('mathPuzzleLeaderboard', JSON.stringify(leaderboard));
     
@@ -552,11 +552,11 @@ function updateGlobalLeaderboard() {
             const scores = Object.values(data);
             scores.sort((a, b) => b.score - a.score);
             
-            // Keep top 50 global scores
-            const topScores = scores.slice(0, 50);
+            // Keep all global scores (no limit)
+            // const topScores = scores.slice(0, 50);
             
-            // Update local storage with global scores
-            localStorage.setItem('mathPuzzleGlobalLeaderboard', JSON.stringify(topScores));
+            // Update local storage with all global scores
+            localStorage.setItem('mathPuzzleGlobalLeaderboard', JSON.stringify(scores));
             
             // If leaderboard is open, refresh it
             const modal = document.getElementById('leaderboardModal');
@@ -612,7 +612,7 @@ function showLeaderboard() {
         if (localLeaderboard.length > 0) {
             const localTitle = document.createElement('div');
             localTitle.className = 'leaderboard-section-title';
-            localTitle.innerHTML = '📱 Your Top Scores';
+            localTitle.innerHTML = `📱 Your Scores (${localLeaderboard.length})`;
             leaderboardList.appendChild(localTitle);
             
             localLeaderboard.forEach((entry, index) => {
@@ -625,12 +625,11 @@ function showLeaderboard() {
         if (globalLeaderboard.length > 0) {
             const globalTitle = document.createElement('div');
             globalTitle.className = 'leaderboard-section-title';
-            globalTitle.innerHTML = '🌍 Global Top Scores (Live)';
+            globalTitle.innerHTML = `🌍 Global Scores (${globalLeaderboard.length})`;
             leaderboardList.appendChild(globalTitle);
             
-            // Show only top 10 global scores
-            const topGlobalScores = globalLeaderboard.slice(0, 10);
-            topGlobalScores.forEach((entry, index) => {
+            // Show all global scores (no limit)
+            globalLeaderboard.forEach((entry, index) => {
                 const entryDiv = createLeaderboardEntry(entry, index, 'global');
                 leaderboardList.appendChild(entryDiv);
             });
@@ -639,7 +638,7 @@ function showLeaderboard() {
     
     // Update modal title based on language
     const t = translations[currentLanguage];
-    document.getElementById('leaderboardTitle').textContent = `🏆 ${t.level} High Scores`;
+    document.getElementById('leaderboardTitle').textContent = `🏆 ${t.level} All Scores`;
     document.getElementById('clearScoresBtn').textContent = 'Clear All Scores';
     
     document.getElementById('leaderboardModal').style.display = 'block';
