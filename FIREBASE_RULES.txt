@@ -4,6 +4,16 @@
       ".read": true,
       ".write": true,
       ".indexOn": ["score", "timestamp"]
+    },
+    "visitors": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["total"]
+    },
+    "currentSessions": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["timestamp"]
     }
   }
 }

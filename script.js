@@ -17,23 +17,31 @@ const database = firebase.database();
 // Visitor Counter
 function trackVisitor() {
     try {
+        console.log('Starting visitor tracking...');
         const visitorRef = database.ref('visitors');
         const sessionRef = database.ref('currentSessions');
         
         // Get current date
         const today = new Date().toLocaleDateString();
+        console.log('Today\'s date:', today);
         
         // Update daily visitor count
         visitorRef.child('total').transaction((currentValue) => {
-            return (currentValue || 0) + 1;
+            const newValue = (currentValue || 0) + 1;
+            console.log('Updating total visitors:', currentValue, '->', newValue);
+            return newValue;
         });
         
         visitorRef.child(today).transaction((currentValue) => {
-            return (currentValue || 0) + 1;
+            const newValue = (currentValue || 0) + 1;
+            console.log('Updating today visitors:', currentValue, '->', newValue);
+            return newValue;
         });
         
         // Track current session
         const sessionId = getDeviceId() + '_' + Date.now();
+        console.log('Session ID:', sessionId);
+        
         sessionRef.child(sessionId).set({
             timestamp: Date.now(),
             device: getDeviceInfo(),
@@ -68,6 +76,7 @@ function trackVisitor() {
 
 function getVisitorStats() {
     try {
+        console.log('Getting visitor stats...');
         const visitorRef = database.ref('visitors');
         const sessionRef = database.ref('currentSessions');
         
@@ -77,6 +86,7 @@ function getVisitorStats() {
             const today = new Date().toLocaleDateString();
             const todayVisitors = data[today] || 0;
             
+            console.log('Firebase visitor data:', data);
             console.log('Visitor stats received:', totalVisitors, todayVisitors);
             
             // Update visitor display
@@ -87,6 +97,7 @@ function getVisitorStats() {
             const sessions = snapshot.val() || {};
             const activePlayers = Object.keys(sessions).length;
             
+            console.log('Firebase session data:', sessions);
             console.log('Active players:', activePlayers);
             
             // Update active players count
