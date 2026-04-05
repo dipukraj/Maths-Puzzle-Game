@@ -604,7 +604,7 @@ function showLeaderboard() {
     updateGlobalLeaderboard();
     
     if (localLeaderboard.length === 0 && globalLeaderboard.length === 0) {
-        leaderboardList.innerHTML = '<p style="text-align: center; color: #666;">No high scores yet. Play to set records!</p>';
+        leaderboardList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">No high scores yet. Play to set records!</p>';
     } else {
         leaderboardList.innerHTML = '';
         
@@ -616,24 +616,7 @@ function showLeaderboard() {
             leaderboardList.appendChild(localTitle);
             
             localLeaderboard.forEach((entry, index) => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'leaderboard-entry local-score';
-                
-                // Add special classes for top 3
-                if (index === 0) entryDiv.classList.add('gold');
-                else if (index === 1) entryDiv.classList.add('silver');
-                else if (index === 2) entryDiv.classList.add('bronze');
-                
-                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-                
-                entryDiv.innerHTML = `
-                    <span class="rank">${rankEmoji}</span>
-                    <div class="score-info">
-                        <div class="score-value">${entry.score} points</div>
-                        <div class="level-info">Level ${entry.level} • ${entry.date} • ${entry.device || 'Device'}</div>
-                    </div>
-                `;
-                
+                const entryDiv = createLeaderboardEntry(entry, index, 'local');
                 leaderboardList.appendChild(entryDiv);
             });
         }
@@ -648,25 +631,7 @@ function showLeaderboard() {
             // Show only top 10 global scores
             const topGlobalScores = globalLeaderboard.slice(0, 10);
             topGlobalScores.forEach((entry, index) => {
-                const entryDiv = document.createElement('div');
-                entryDiv.className = 'leaderboard-entry global-score';
-                
-                // Check if this is current player's score
-                const isCurrentPlayer = entry.deviceId === getDeviceId();
-                if (isCurrentPlayer) {
-                    entryDiv.classList.add('current-player');
-                }
-                
-                const rankEmoji = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-                
-                entryDiv.innerHTML = `
-                    <span class="rank">${rankEmoji}</span>
-                    <div class="score-info">
-                        <div class="score-value">${entry.score} points ${isCurrentPlayer ? '(YOU)' : ''}</div>
-                        <div class="level-info">Level ${entry.level} • ${entry.date} • ${entry.device || 'Device'}</div>
-                    </div>
-                `;
-                
+                const entryDiv = createLeaderboardEntry(entry, index, 'global');
                 leaderboardList.appendChild(entryDiv);
             });
         }
@@ -678,6 +643,36 @@ function showLeaderboard() {
     document.getElementById('clearScoresBtn').textContent = 'Clear All Scores';
     
     document.getElementById('leaderboardModal').style.display = 'block';
+}
+
+function createLeaderboardEntry(entry, index, type) {
+    const entryDiv = document.createElement('div');
+    entryDiv.className = 'leaderboard-entry ' + type + '-score';
+    
+    // Add special classes for top 3
+    if (index === 0) entryDiv.classList.add('gold');
+    else if (index === 1) entryDiv.classList.add('silver');
+    else if (index === 2) entryDiv.classList.add('bronze');
+    
+    // Check if this is current player's score
+    const isCurrentPlayer = entry.deviceId === getDeviceId();
+    if (isCurrentPlayer) {
+        entryDiv.classList.add('current-player');
+    }
+    
+    const rankEmoji = type === 'global' ? 
+        (index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`) :
+        (index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`);
+    
+    entryDiv.innerHTML = `
+        <span class="rank">${rankEmoji}</span>
+        <div class="score-info">
+            <div class="score-value">${entry.score} points ${isCurrentPlayer ? '(YOU)' : ''}</div>
+            <div class="level-info">Level ${entry.level} • ${entry.date} • ${entry.device || 'Device'}</div>
+        </div>
+    `;
+    
+    return entryDiv;
 }
 
 function getGlobalLeaderboard() {

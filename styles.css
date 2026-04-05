@@ -326,10 +326,15 @@ h1 {
     padding: 30px;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 0 0 20px 20px;
+    max-height: 60vh;
+    overflow-y: auto;
 }
 
 .leaderboard-list {
     margin-bottom: 20px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding-right: 10px;
 }
 
 .leaderboard-section-title {
@@ -442,7 +447,64 @@ h1 {
     margin-bottom: 20px;
 }
 
-/* Footer Styles */
+/* Custom scrollbar for better visibility */
+.leaderboard-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.leaderboard-list::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.leaderboard-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .modal-content {
+        width: 95%;
+        max-width: 400px;
+        margin: 10px auto;
+    }
+    
+    .modal-body {
+        padding: 20px;
+        max-height: 70vh;
+    }
+    
+    .leaderboard-list {
+        max-height: 60vh;
+    }
+    
+    .leaderboard-entry {
+        padding: 12px 15px;
+        font-size: 0.9em;
+    }
+    
+    .score-value {
+        font-size: 1em;
+    }
+    
+    .level-info {
+        font-size: 0.8em;
+    }
+}
+
+/* Desktop responsive */
+@media (min-width: 769px) {
+    .modal-content {
+        width: 500px;
+        max-width: 500px;
+    }
+}
 .footer {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
