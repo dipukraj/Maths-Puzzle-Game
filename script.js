@@ -2,7 +2,7 @@
 const firebaseConfig = {
     apiKey: "AIzaSyBuq1sYRIhikPcDlOR0s72s7PETunWvKGU",
     authDomain: "math-puzzle-game-63a5d.firebaseapp.com",
-    databaseURL: "https://math-puzzle-game-63a5d-default-rtdb.firebaseio.com",
+    databaseURL: "https://math-puzzle-game-63a5d-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId: "math-puzzle-game-63a5d",
     storageBucket: "math-puzzle-game-63a5d.firebasestorage.app",
     messagingSenderId: "677324694873",
