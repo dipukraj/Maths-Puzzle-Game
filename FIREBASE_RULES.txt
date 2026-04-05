@@ -1,0 +1,9 @@
+{
+  "rules": {
+    "scores": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["score", "timestamp"]
+    }
+  }
+}

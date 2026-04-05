@@ -1,3 +1,19 @@
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyBuq1sYRIhikPcDlOR0s72s7PETunWvKGU",
+    authDomain: "math-puzzle-game-63a5d.firebaseapp.com",
+    databaseURL: "https://math-puzzle-game-63a5d-default-rtdb.firebaseio.com",
+    projectId: "math-puzzle-game-63a5d",
+    storageBucket: "math-puzzle-game-63a5d.firebasestorage.app",
+    messagingSenderId: "677324694873",
+    appId: "1:677324694873:web:6f0633c6abe36971d3d848",
+    measurementId: "G-P6W9RF2EVE"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
+
 // Game variables
 let currentLevel = 1;
 let score = 0;
@@ -493,18 +509,84 @@ function saveScore() {
         score: score,
         level: currentLevel,
         date: new Date().toLocaleDateString(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        device: getDeviceInfo(),
+        deviceId: getDeviceId()
     };
     
     leaderboard.push(newScore);
     leaderboard.sort((a, b) => b.score - a.score); // Sort by score (highest first)
     
-    // Keep only top 5 scores
-    if (leaderboard.length > 5) {
-        leaderboard.splice(5);
+    // Keep only top 10 scores
+    if (leaderboard.length > 10) {
+        leaderboard.splice(10);
     }
     
     localStorage.setItem('mathPuzzleLeaderboard', JSON.stringify(leaderboard));
+    
+    // Save to Firebase for real-time sync
+    saveToFirebase(newScore);
+}
+
+function saveToFirebase(scoreData) {
+    const scoresRef = database.ref('scores');
+    const newScoreRef = scoresRef.push();
+    
+    scoreData.firebaseId = newScoreRef.key;
+    newScoreRef.set(scoreData)
+        .then(() => {
+            console.log('Score saved to Firebase successfully');
+            // Update global leaderboard
+            updateGlobalLeaderboard();
+        })
+        .catch((error) => {
+            console.error('Error saving to Firebase:', error);
+        });
+}
+
+function updateGlobalLeaderboard() {
+    const scoresRef = database.ref('scores');
+    scoresRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            const scores = Object.values(data);
+            scores.sort((a, b) => b.score - a.score);
+            
+            // Keep top 50 global scores
+            const topScores = scores.slice(0, 50);
+            
+            // Update local storage with global scores
+            localStorage.setItem('mathPuzzleGlobalLeaderboard', JSON.stringify(topScores));
+            
+            // If leaderboard is open, refresh it
+            const modal = document.getElementById('leaderboardModal');
+            if (modal.style.display === 'block') {
+                showLeaderboard();
+            }
+        }
+    });
+}
+
+function getDeviceInfo() {
+    const userAgent = navigator.userAgent;
+    let deviceType = 'Unknown';
+    
+    if (/Mobile|Android|iPhone|iPad/.test(userAgent)) {
+        deviceType = 'Mobile';
+    } else if (/Windows|Mac|Linux/.test(userAgent)) {
+        deviceType = 'Desktop';
+    }
+    
+    return deviceType;
+}
+
+function getDeviceId() {
+    let deviceId = localStorage.getItem('mathPuzzleDeviceId');
+    if (!deviceId) {
+        deviceId = 'Device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        localStorage.setItem('mathPuzzleDeviceId', deviceId);
+    }
+    return deviceId;
 }
 
 function getLeaderboard() {
@@ -514,34 +596,80 @@ function getLeaderboard() {
 
 function showLeaderboard() {
     soundManager.playClickSound();
-    const leaderboard = getLeaderboard();
+    const localLeaderboard = getLeaderboard();
+    const globalLeaderboard = getGlobalLeaderboard();
     const leaderboardList = document.getElementById('leaderboardList');
     
-    if (leaderboard.length === 0) {
+    // Start listening for real-time updates
+    updateGlobalLeaderboard();
+    
+    if (localLeaderboard.length === 0 && globalLeaderboard.length === 0) {
         leaderboardList.innerHTML = '<p style="text-align: center; color: #666;">No high scores yet. Play to set records!</p>';
     } else {
         leaderboardList.innerHTML = '';
-        leaderboard.forEach((entry, index) => {
-            const entryDiv = document.createElement('div');
-            entryDiv.className = 'leaderboard-entry';
+        
+        // Show local scores first
+        if (localLeaderboard.length > 0) {
+            const localTitle = document.createElement('div');
+            localTitle.className = 'leaderboard-section-title';
+            localTitle.innerHTML = '📱 Your Top Scores';
+            leaderboardList.appendChild(localTitle);
             
-            // Add special classes for top 3
-            if (index === 0) entryDiv.classList.add('gold');
-            else if (index === 1) entryDiv.classList.add('silver');
-            else if (index === 2) entryDiv.classList.add('bronze');
+            localLeaderboard.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'leaderboard-entry local-score';
+                
+                // Add special classes for top 3
+                if (index === 0) entryDiv.classList.add('gold');
+                else if (index === 1) entryDiv.classList.add('silver');
+                else if (index === 2) entryDiv.classList.add('bronze');
+                
+                const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                
+                entryDiv.innerHTML = `
+                    <span class="rank">${rankEmoji}</span>
+                    <div class="score-info">
+                        <div class="score-value">${entry.score} points</div>
+                        <div class="level-info">Level ${entry.level} • ${entry.date} • ${entry.device || 'Device'}</div>
+                    </div>
+                `;
+                
+                leaderboardList.appendChild(entryDiv);
+            });
+        }
+        
+        // Show global scores
+        if (globalLeaderboard.length > 0) {
+            const globalTitle = document.createElement('div');
+            globalTitle.className = 'leaderboard-section-title';
+            globalTitle.innerHTML = '🌍 Global Top Scores (Live)';
+            leaderboardList.appendChild(globalTitle);
             
-            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
-            
-            entryDiv.innerHTML = `
-                <span class="rank">${rankEmoji}</span>
-                <div class="score-info">
-                    <div class="score-value">${entry.score} points</div>
-                    <div class="level-info">Level ${entry.level} • ${entry.date}</div>
-                </div>
-            `;
-            
-            leaderboardList.appendChild(entryDiv);
-        });
+            // Show only top 10 global scores
+            const topGlobalScores = globalLeaderboard.slice(0, 10);
+            topGlobalScores.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'leaderboard-entry global-score';
+                
+                // Check if this is current player's score
+                const isCurrentPlayer = entry.deviceId === getDeviceId();
+                if (isCurrentPlayer) {
+                    entryDiv.classList.add('current-player');
+                }
+                
+                const rankEmoji = index === 0 ? '🏆' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`;
+                
+                entryDiv.innerHTML = `
+                    <span class="rank">${rankEmoji}</span>
+                    <div class="score-info">
+                        <div class="score-value">${entry.score} points ${isCurrentPlayer ? '(YOU)' : ''}</div>
+                        <div class="level-info">Level ${entry.level} • ${entry.date} • ${entry.device || 'Device'}</div>
+                    </div>
+                `;
+                
+                leaderboardList.appendChild(entryDiv);
+            });
+        }
     }
     
     // Update modal title based on language
@@ -550,6 +678,11 @@ function showLeaderboard() {
     document.getElementById('clearScoresBtn').textContent = 'Clear All Scores';
     
     document.getElementById('leaderboardModal').style.display = 'block';
+}
+
+function getGlobalLeaderboard() {
+    const saved = localStorage.getItem('mathPuzzleGlobalLeaderboard');
+    return saved ? JSON.parse(saved) : [];
 }
 
 function closeLeaderboard() {
