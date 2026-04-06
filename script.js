@@ -13,6 +13,15 @@ const firebaseConfig = {
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const database = firebase.database();
+const SESSION_STALE_MS = 2 * 60 * 1000;
+let currentSessionRef = null;
+let sessionHeartbeatInterval = null;
+let visitorListenersAttached = false;
+let currentActivePlayers = 0;
+
+function getTodayKey() {
+    return new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+}
 
 // Visitor Counter
 function trackVisitor() {
@@ -22,7 +31,7 @@ function trackVisitor() {
         const sessionRef = database.ref('currentSessions');
         
         // Get current date
-        const today = new Date().toLocaleDateString();
+        const today = getTodayKey();
         console.log('Today\'s date:', today);
         
         // Update daily visitor count
@@ -39,43 +48,55 @@ function trackVisitor() {
         });
         
         // Track current session
-        const sessionId = getDeviceId() + '_' + Date.now();
+        const sessionId = getDeviceId() + '_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
         console.log('Session ID:', sessionId);
-        
-        sessionRef.child(sessionId).set({
-            timestamp: Date.now(),
+
+        currentSessionRef = sessionRef.child(sessionId);
+        currentSessionRef.set({
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
             device: getDeviceInfo(),
-            lastSeen: Date.now()
+            deviceId: getDeviceId(),
+            lastSeen: firebase.database.ServerValue.TIMESTAMP
         });
-        
+
+        // Remove this session automatically when connection drops
+        currentSessionRef.onDisconnect().remove();
+
         console.log('Visitor tracked successfully');
-        
-        // Remove session after 30 minutes of inactivity
-        setTimeout(() => {
-            sessionRef.child(sessionId).remove();
-        }, 30 * 60 * 1000);
-        
-        // Update last seen every minute
-        const updateInterval = setInterval(() => {
-            sessionRef.child(sessionId).update({
-                lastSeen: Date.now()
-            });
-        }, 60 * 1000);
-        
-        // Clear interval when page unloads
+
+        // Keep session fresh while player is active
+        if (sessionHeartbeatInterval) {
+            clearInterval(sessionHeartbeatInterval);
+        }
+        sessionHeartbeatInterval = setInterval(() => {
+            if (currentSessionRef) {
+                currentSessionRef.update({
+                    lastSeen: firebase.database.ServerValue.TIMESTAMP
+                });
+            }
+        }, 45 * 1000);
+
+        // Clear heartbeat and try to remove session when page unloads
         window.addEventListener('beforeunload', () => {
-            clearInterval(updateInterval);
-            sessionRef.child(sessionId).remove();
+            if (sessionHeartbeatInterval) {
+                clearInterval(sessionHeartbeatInterval);
+            }
+            if (currentSessionRef) {
+                currentSessionRef.remove();
+            }
         });
     } catch (error) {
         console.error('Error tracking visitor:', error);
         // Show fallback display
-        updateVisitorDisplay(1, 1);
+        updateVisitorDisplay(1, 1, 1);
     }
 }
 
 function getVisitorStats() {
     try {
+        if (visitorListenersAttached) return;
+        visitorListenersAttached = true;
+
         console.log('Getting visitor stats...');
         const visitorRef = database.ref('visitors');
         const sessionRef = database.ref('currentSessions');
@@ -83,35 +104,48 @@ function getVisitorStats() {
         visitorRef.on('value', (snapshot) => {
             const data = snapshot.val() || {};
             const totalVisitors = data.total || 0;
-            const today = new Date().toLocaleDateString();
+            const today = getTodayKey();
             const todayVisitors = data[today] || 0;
             
             console.log('Firebase visitor data:', data);
             console.log('Visitor stats received:', totalVisitors, todayVisitors);
             
             // Update visitor display
-            updateVisitorDisplay(totalVisitors, todayVisitors);
+            updateVisitorDisplay(totalVisitors, todayVisitors, currentActivePlayers);
         });
         
         sessionRef.on('value', (snapshot) => {
             const sessions = snapshot.val() || {};
-            const activePlayers = Object.keys(sessions).length;
+            const now = Date.now();
+            let activePlayers = 0;
+
+            Object.entries(sessions).forEach(([sessionId, sessionData]) => {
+                const lastSeen = sessionData?.lastSeen || sessionData?.timestamp || 0;
+
+                if (now - lastSeen <= SESSION_STALE_MS) {
+                    activePlayers++;
+                } else {
+                    // Remove stale sessions so "Online Now" remains accurate
+                    sessionRef.child(sessionId).remove();
+                }
+            });
             
             console.log('Firebase session data:', sessions);
             console.log('Active players:', activePlayers);
             
             // Update active players count
-            updateActivePlayersDisplay(activePlayers);
+            currentActivePlayers = activePlayers;
+            updateActivePlayersDisplay(currentActivePlayers);
         });
     } catch (error) {
         console.error('Error getting visitor stats:', error);
         // Show fallback display
-        updateVisitorDisplay(1, 1);
+        updateVisitorDisplay(1, 1, 1);
         updateActivePlayersDisplay(1);
     }
 }
 
-function updateVisitorDisplay(total, today) {
+function updateVisitorDisplay(total, today, active = 0) {
     let visitorDisplay = document.getElementById('visitorDisplay');
     if (!visitorDisplay) {
         visitorDisplay = document.createElement('div');
@@ -129,6 +163,8 @@ function updateVisitorDisplay(total, today) {
             console.log('Footer not found, added to body');
         }
     }
+
+    const lastUpdated = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
     visitorDisplay.innerHTML = `
         <div class="visitor-stats">
@@ -136,7 +172,8 @@ function updateVisitorDisplay(total, today) {
             <div class="visitor-info">
                 <div class="visitor-count">Total Players: ${total}</div>
                 <div class="today-count">Today: ${today}</div>
-                <div class="active-count" id="activeCount">Online Now: 0</div>
+                <div class="active-count" id="activeCount">Online Now: ${active}</div>
+                <div class="updated-count" id="visitorUpdatedAt">Last updated: ${lastUpdated}</div>
             </div>
         </div>
     `;
@@ -148,6 +185,11 @@ function updateActivePlayersDisplay(active) {
     const activeCount = document.getElementById('activeCount');
     if (activeCount) {
         activeCount.textContent = `Online Now: ${active}`;
+    }
+
+    const updatedAtEl = document.getElementById('visitorUpdatedAt');
+    if (updatedAtEl) {
+        updatedAtEl.textContent = `Last updated: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`;
     }
 }
 
@@ -848,7 +890,7 @@ window.onload = function() {
         const visitorDisplay = document.getElementById('visitorDisplay');
         if (!visitorDisplay) {
             console.log('Firebase not working, showing fallback visitor counter');
-            updateVisitorDisplay(1, 1);
+            updateVisitorDisplay(1, 1, 1);
             updateActivePlayersDisplay(1);
         }
     }, 3000);
